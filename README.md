@@ -62,6 +62,8 @@ Game version: **WoW Forever**.
 
 Uses LibStub, CallbackHandler, LibDataBroker and LibDBIcon for the minimap button.
 
+License: all rights reserved, see [LICENSE](https://github.com/Ahri-ninetailed/ForeverBugs/blob/main/LICENSE). You are welcome to use the addon; please ask before copying or reuploading its code.
+
 Source code and bug reports: [GitHub](https://github.com/Ahri-ninetailed/ForeverBugs)
 
 ---
@@ -127,5 +129,7 @@ BugSack и BugGrabber — классические ловцы ошибок, и �
 Версия игры: **WoW Forever**.
 
 Для кнопки у миникарты используются LibStub, CallbackHandler, LibDataBroker и LibDBIcon.
+
+Лицензия: все права защищены, см. [LICENSE](https://github.com/Ahri-ninetailed/ForeverBugs/blob/main/LICENSE). Пользоваться аддоном можно свободно; копировать или перевыкладывать его код — только с разрешения автора.
 
 Исходный код и сообщения об ошибках: [GitHub](https://github.com/Ahri-ninetailed/ForeverBugs)

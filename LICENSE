@@ -1,21 +1,18 @@
-MIT License
+Forever Bugs
+Copyright (c) 2026 Ahri-ninetailed. All rights reserved.
 
-Copyright (c) 2026 Ahri-ninetailed
+You may download Forever Bugs and use it to play World of Warcraft.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+You may not copy, modify, publish, distribute, sell or reupload Forever Bugs
+or any part of its source code, in original or changed form, without prior
+written permission from the author. GitHub's Terms of Service still let you
+view this repository and fork it on GitHub, for example to suggest changes
+through a pull request.
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+The libraries in the Libs folder of the release (LibStub, CallbackHandler-1.0,
+LibDataBroker-1.1 and LibDBIcon-1.0) are made by other authors and keep their
+own licenses; this notice does not cover them.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+FOREVER BUGS IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY ARISING FROM, OUT OF OR IN CONNECTION WITH FOREVER BUGS OR ITS USE.

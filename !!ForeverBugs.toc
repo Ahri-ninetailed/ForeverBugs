@@ -4,6 +4,7 @@
 ## Notes-ruRU: Ловит ошибки Lua и заблокированные действия и показывает, какой аддон виноват. Сделан для WoW Forever. /fbugs
 ## Author: Ahri-ninetailed
 ## Version: @project-version@
+## X-License: All Rights Reserved
 ## IconTexture: Interface\Icons\Spell_Nature_InsectSwarm
 ## Category: Development Tools
 ## Category-ruRU: Инструменты разработки
