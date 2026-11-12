@@ -1,0 +1,8 @@
+.release/
+*.zip
+Thumbs.db
+desktop.ini
+.DS_Store
+Libs/
+__pycache__/
+.venv/
