@@ -49,12 +49,42 @@ function ns.ToggleWindow() end
 function ns.ShowOptions() end
 
 -----------------------------------------------------------------------
--- Only one error handler can be active at a time. BugGrabber and BugSack
--- would compete with us for it, so they are switched off from the next login
--- on, the same way BugGrabber switches off its own rivals.
+-- Only one error handler can be active at a time. Other error catchers would
+-- compete with us for it (we load first, so they would just stay empty), so
+-- the enabled ones are switched off from the next login on, and the player is
+-- told so in chat at login. Rivals: BugGrabber, BugSack and ForeverBugs by
+-- iThomthi (a different addon with a name like ours).
 
-for _, name in ipairs({ "!BugGrabber", "BugSack" }) do
-	pcall(C_AddOns.DisableAddOn, name)
+local switchedOff = {} -- names shown in the login message
+
+local function Plain(text)
+	return (text or ""):gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", ""):gsub("%s", ""):lower()
+end
+
+local function RivalName(name, title)
+	if name == ADDON then
+		return nil
+	elseif name == "!BugGrabber" then
+		return "BugGrabber"
+	elseif name == "BugSack" then
+		return "BugSack"
+	elseif Plain(name) == "foreverbugs" or Plain(title) == "foreverbugs" then
+		return "ForeverBugs (iThomthi)"
+	end
+end
+
+do
+	local character = UnitNameUnmodified and UnitNameUnmodified("player")
+	for i = 1, C_AddOns.GetNumAddOns() do
+		local name, title = C_AddOns.GetAddOnInfo(i)
+		local shown = type(name) == "string" and RivalName(name, title)
+		if shown then
+			local ok, state = pcall(C_AddOns.GetAddOnEnableState, name, character)
+			if ok and type(state) == "number" and state > 0 and pcall(C_AddOns.DisableAddOn, name) then
+				switchedOff[#switchedOff + 1] = shown
+			end
+		end
+	end
 end
 
 -----------------------------------------------------------------------
@@ -777,6 +807,9 @@ events:SetScript("OnEvent", function(self, event, ...)
 		end
 	elseif event == "PLAYER_LOGIN" then
 		loggedIn = true
+		if #switchedOff > 0 then
+			ns.Print(L.RIVALS_OFF:format(table.concat(switchedOff, ", ")))
+		end
 		Safely(ns.ApplyTaintLog)
 		for _, fn in ipairs(loginListeners) do
 			Safely(fn)

@@ -10,6 +10,7 @@ ns.LOCALES.enUS = {
 	SLASH_HELP = "/fbugs - open the window, /fbugs options - settings, /fbugs clear - delete all errors, /fbugs <number> - print an error to chat.",
 	LANG_RELOAD = "The language changes after /reload.",
 	UNKNOWN_ADDON = "unknown addon",
+	RIVALS_OFF = "switched off %s from the next login: only one error catcher can work at a time. To use them instead, turn them on in the addon list and turn off Forever Bugs.",
 
 	-- texts the game hides from addons
 	SECRET_MESSAGE = "(the game hid the text of this error from addons)",
@@ -119,6 +120,7 @@ ns.LOCALES.ruRU = {
 	SLASH_HELP = "/fbugs - открыть окно, /fbugs options - настройки, /fbugs clear - удалить все ошибки, /fbugs <номер> - вывести ошибку в чат.",
 	LANG_RELOAD = "Язык сменится после /reload.",
 	UNKNOWN_ADDON = "неизвестный аддон",
+	RIVALS_OFF = "отключил %s со следующего входа: одновременно может работать только один ловец ошибок. Чтобы пользоваться ими, включите их в списке аддонов и отключите Forever Bugs.",
 
 	SECRET_MESSAGE = "(игра скрыла текст этой ошибки от аддонов)",
 	SECRET_STACK = "(игра скрыла цепочку вызовов от аддонов)",

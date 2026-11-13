@@ -54,6 +54,9 @@ local function NewGame(options)
 	local env = setmetatable({}, { __index = BASE })
 	env._G = env
 	RunFile(env, root .. "/tests/mock.lua")
+	if options.setup then
+		options.setup(env.mock) -- before the addon loads: installed addons and the like
+	end
 	env.mock.locale = options.locale or "enUS"
 	env.ForeverBugsDB = options.saved
 	local ns = {}
@@ -141,8 +144,8 @@ do
 	check("our error handler is installed", env.mock.handler == ns.OnError)
 	env.seterrorhandler(function() end)
 	check("other addons cannot replace it", env.mock.handler == ns.OnError)
-	local disabled = table.concat(env.mock.disabled, ",")
-	check("BugGrabber and BugSack get disabled", disabled:find("!BugGrabber", 1, true) and disabled:find("BugSack", 1, true), disabled)
+	check("no rivals installed: nothing switched off, nothing said", #env.mock.disabled == 0
+		and not Printed(env, "switched off"))
 	check("the game's warning popup is switched off", not env.ScriptErrorsFrame.events.LUA_WARNING)
 	check("fresh install starts at session 1", env.ForeverBugsDB.session == 1, env.ForeverBugsDB.session)
 	check("default settings", ns.settings.sound == "RAID_WARNING" and ns.settings.fontSize == "GameFontHighlight"
@@ -150,6 +153,34 @@ do
 	check("settings page in the game menu", env.mock.registeredCategory and env.mock.registeredCategory.name == "Forever Bugs")
 	check("minimap button registered", env.mock.DBIcon.buttons.ForeverBugs ~= nil
 		and env.mock.DBIcon.buttons.ForeverBugs.db == env.ForeverBugsDB.minimap)
+end
+
+do
+	local function WithRivals(mock)
+		for _, name in ipairs({ "!BugGrabber", "BugSack", "ForeverBugs" }) do
+			mock.addons[#mock.addons + 1] = name
+		end
+		mock.titles["!!ForeverBugs"] = "Forever Bugs"
+		mock.titles.ForeverBugs = "|cff33ff99ForeverBugs|r"
+	end
+	local env = NewGame({ setup = WithRivals })
+	local disabled = table.concat(env.mock.disabled, ",")
+	check("enabled rivals are switched off", disabled == "!BugGrabber,BugSack,ForeverBugs", disabled)
+	check("but never ourselves", not disabled:find("!!ForeverBugs", 1, true))
+	check("and the player is told at login", Printed(env, "switched off BugGrabber, BugSack, ForeverBugs (iThomthi) from the next login"))
+
+	env = NewGame({ setup = function(mock)
+		WithRivals(mock)
+		mock.enableState.BugSack = 0
+		mock.enableState.ForeverBugs = 0
+	end })
+	check("rivals already off are left alone", table.concat(env.mock.disabled, ",") == "!BugGrabber"
+		and Printed(env, "switched off BugGrabber from") and not Printed(env, "BugSack"))
+
+	env = NewGame({ login = false, setup = WithRivals })
+	check("the message waits for the login", not Printed(env, "switched off"))
+	env.mock.Fire("PLAYER_LOGIN")
+	check("and comes once", Printed(env, "switched off"))
 end
 
 -----------------------------------------------------------------------

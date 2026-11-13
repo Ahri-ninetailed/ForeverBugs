@@ -9,3 +9,5 @@ externals:
 ignore:
   - README.md
   - tests
+  - Libs/LibStub/tests
+  - Libs/LibStub/LibStub.toc

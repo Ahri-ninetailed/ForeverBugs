@@ -200,12 +200,21 @@ function hooksecurefunc(a, b, c)
 	end
 end
 
+-- mock.titles[name]: the addon's title, if not its folder name.
+-- mock.enableState[name]: 0 = disabled, 2 = enabled (the default).
+mock.titles = {}
+mock.enableState = {}
 C_AddOns = {
 	GetNumAddOns = function() return #mock.addons end,
-	GetAddOnInfo = function(i) return mock.addons[i] end,
+	GetAddOnInfo = function(i)
+		local name = mock.addons[i]
+		return name, mock.titles[name] or name
+	end,
+	GetAddOnEnableState = function(name) return mock.enableState[name] or 2 end,
 	DisableAddOn = function(name) mock.disabled[#mock.disabled + 1] = name end,
 	GetAddOnMetadata = function(name, field) return mock.meta[name] and mock.meta[name][field] end,
 }
+function UnitNameUnmodified() return "Tester" end
 
 SOUNDKIT = { RAID_WARNING = 8959, IG_QUEST_LOG_OPEN = 844, IG_QUEST_LOG_CLOSE = 845, IG_CHARACTER_INFO_TAB = 841 }
 INTERFACE_ACTION_BLOCKED = "Interface action failed because of an AddOn"

@@ -28,7 +28,9 @@ It also catches what other error catchers miss in WoW Forever: the message **"In
 - **Settings** in the window and in the game menu (Esc > Options > AddOns). English and Russian, or the language of the game.
 - **Taint log switch:** turns on the game's own taint log (`Logs\taint.log`) and keeps it on across restarts.
 - **Stays light and safe:** loads before other addons so it sees their errors from the very start; keeps the last 500 errors; pauses recording if an addon throws more than 10 errors a second; does nothing while there are no errors. Blocked actions are watched through secure hooks only.
-- **Replaces BugGrabber and BugSack.** Only one error catcher can work at a time, so Forever Bugs switches them off (from the next login on).
+- **Replaces BugGrabber, BugSack and ForeverBugs by iThomthi.** Only one error catcher can work at a time, so Forever Bugs switches the enabled ones off from the next login on and says so in chat. Want one of them instead? Turn it back on in the addon list and turn Forever Bugs off.
+
+*Not to be confused with [ForeverBugs](https://www.curseforge.com/wow/addons/foreverbugs) by iThomthi: a different addon with a similar name. Install only one of them.*
 
 ## Compared to BugSack and BugGrabber
 
@@ -96,7 +98,9 @@ Source code and bug reports: [GitHub](https://github.com/Ahri-ninetailed/Forever
 - **Настройки** в окне и в меню игры (Esc → Настройки → Модификации). Английский и русский язык или язык игры.
 - **Журнал taint:** включает собственный журнал игры (`Logs\taint.log`) и держит его включённым после перезапусков.
 - **Лёгкий и безопасный:** загружается раньше других аддонов, чтобы видеть их ошибки с самого начала; хранит последние 500 ошибок; приостанавливает запись, если аддон сыплет больше 10 ошибок в секунду; пока ошибок нет, ничего не делает. За блокировками следит только через безопасные перехваты.
-- **Заменяет BugGrabber и BugSack.** Одновременно может работать только один ловец ошибок, поэтому Forever Bugs их отключает (со следующего входа в игру).
+- **Заменяет BugGrabber, BugSack и ForeverBugs от iThomthi.** Одновременно может работать только один ловец ошибок, поэтому Forever Bugs отключает включённые из них со следующего входа в игру и сообщает об этом в чате. Хотите пользоваться одним из них? Включите его обратно в списке аддонов и отключите Forever Bugs.
+
+*Не путать с [ForeverBugs](https://www.curseforge.com/wow/addons/foreverbugs) от iThomthi: это другой аддон с похожим названием. Ставьте только один из них.*
 
 ## Чем отличается от BugSack и BugGrabber
 
