@@ -8,6 +8,7 @@ externals:
 
 ignore:
   - README.md
+  - media
   - tests
   - Libs/LibStub/tests
   - Libs/LibStub/LibStub.toc

@@ -6,6 +6,10 @@ It also catches what other error catchers miss in WoW Forever: the message **"In
 
 *Русское описание ниже.*
 
+![The Forever Bugs window: the list of errors on the left, the chosen error on the right](https://raw.githubusercontent.com/Ahri-ninetailed/ForeverBugs/main/media/window.png)
+
+![Forever Bugs settings](https://raw.githubusercontent.com/Ahri-ninetailed/ForeverBugs/main/media/settings.png)
+
 ## Features
 
 - **Catches every Lua error** of every addon and of the game's own interface, with the call stack and the local variables at the moment of the error. Lua warnings are caught too.
@@ -22,7 +26,10 @@ It also catches what other error catchers miss in WoW Forever: the message **"In
   - repeats are shown as one row with a count, the first and the last time, and the **history** of when it happened (the last 50 times of each error);
   - **"Each time separately"**: every occurrence as its own row with its time;
   - new errors are marked; **delete** a single error or all of them.
-- **Copy-ready reports** for GitHub, CurseForge or Discord, always in English: the addon and game versions, times, history, place, call stack and variables. "Copy all shown" puts up to 10 errors into one text that fits a GitHub issue.
+- **Copy-ready reports** for GitHub, CurseForge or Discord, always in English: the addon and game versions, times, history, place, call stack and variables.
+  - **Copy this error**, under the error text, copies the chosen error.
+  - **Copy list (N)**, under the list, copies every error in the list into one text that fits a GitHub issue. The tab, the search and the addon filter decide what is in the list; the button shows how many errors it takes, its tooltip shows the filters, and the copied rows light up.
+  - While the text is selected, the window says what to press (Ctrl+C to copy, Esc to go back) and shows "Copied!" after Ctrl+C.
 - **Minimap button:** red when there are errors you have not seen, yellow when all are seen, plain when there are none. The tooltip lists the newest errors. Click: open the window; Shift-click: reload the interface; right-click: settings; Alt-click: delete all errors (if you allow it). It can also sit in the game's addon menu at the minimap.
 - **Alerts:** a sound (7 sounds of the game to choose from, also on the Master channel), a reminder in chat with a link that opens the error, or opening the window by itself (never during combat). All optional.
 - **Settings** in the window and in the game menu (Esc > Options > AddOns). English and Russian, or the language of the game.
@@ -41,7 +48,7 @@ BugSack and BugGrabber are the classic error catchers, and they work in WoW Fore
 - **Names the culprit for you**, with the file and line, instead of leaving you to read the call stack.
 - **A list of all errors** with a filter by addon, instead of paging through them one at a time.
 - **History:** when each error happened, not only how many times.
-- **Copy-ready reports** in English with the addon and game versions, for one error or up to 10 at once.
+- **Copy-ready reports** in English with the addon and game versions, for one error or the whole list at once.
 - **Plain-text search:** searching for brackets or dots works as expected.
 - **New or already seen:** the minimap button turns red only for errors you have not looked at yet.
 - **One addon instead of two.**
@@ -53,6 +60,7 @@ What BugSack has and Forever Bugs does not: sending errors to another player in 
 1. Play as usual. When something breaks, the minimap button turns red.
 2. Click it (or type `/fbugs`) and pick the error in the list.
 3. To report it to the addon's author, press **Copy this error**, then Ctrl+C, and paste it into their GitHub, CurseForge page or Discord.
+4. To send several errors of one addon at once, choose the addon in the filter at the top right, press **Copy list**, then Ctrl+C.
 
 Commands: `/fbugs` opens or closes the window, `/fbugs options` the settings, `/fbugs clear` deletes all errors, `/fbugs 5` prints error number 5 to chat. `/foreverbugs` works too.
 
@@ -76,6 +84,10 @@ Source code and bug reports: [GitHub](https://github.com/Ahri-ninetailed/Forever
 
 Ловит и то, что другие ловцы ошибок в WoW Forever пропускают: сообщение **«Interface action failed because of an AddOn»**, которое этот клиент часто выводит, ничего не сообщая аддонам.
 
+![Окно Forever Bugs: список ошибок слева, выбранная ошибка справа](https://raw.githubusercontent.com/Ahri-ninetailed/ForeverBugs/main/media/window.png)
+
+![Настройки Forever Bugs](https://raw.githubusercontent.com/Ahri-ninetailed/ForeverBugs/main/media/settings.png)
+
 ## Возможности
 
 - **Ловит все ошибки Lua** всех аддонов и самого интерфейса игры, с цепочкой вызовов и локальными переменными на момент ошибки. Предупреждения Lua тоже.
@@ -92,7 +104,10 @@ Source code and bug reports: [GitHub](https://github.com/Ahri-ninetailed/Forever
   - повторы показаны одной строкой со счётчиком, временем первого и последнего раза и **историей** появлений (последние 50 раз каждой ошибки);
   - **«Каждый раз отдельно»**: каждое появление отдельной строкой со своим временем;
   - новые ошибки отмечены; можно **удалить** одну ошибку или все.
-- **Готовые отчёты** для GitHub, CurseForge или Discord, всегда на английском: версии аддона и игры, время, история, место, цепочка вызовов и переменные. «Копировать все показанные» собирает до 10 ошибок в один текст, который влезает в задачу на GitHub.
+- **Готовые отчёты** для GitHub, CurseForge или Discord, всегда на английском: версии аддона и игры, время, история, место, цепочка вызовов и переменные.
+  - **Копировать ошибку** под текстом ошибки копирует выбранную ошибку.
+  - **Копировать список (N)** под списком копирует все ошибки из списка одним текстом, который влезает в задачу на GitHub. Что попадает в список, решают вкладка, поиск и фильтр по аддону; на кнопке видно, сколько ошибок она возьмёт, в подсказке — какие фильтры включены, а скопированные строки подсвечиваются.
+  - Пока текст выделен, окно подсказывает, что нажать (Ctrl+C — скопировать, Esc — назад), а после Ctrl+C пишет «Скопировано!».
 - **Кнопка у миникарты:** красная, если есть ошибки, которые вы ещё не видели; жёлтая, если все просмотрены; обычная, если ошибок нет. В подсказке свежие ошибки. Клик: открыть окно; Shift+клик: перезагрузить интерфейс; правый клик: настройки; Alt+клик: удалить все ошибки (если разрешено). Может быть и в меню аддонов у миникарты.
 - **Оповещения:** звук (7 звуков игры на выбор, можно через общий канал), напоминание в чате со ссылкой на ошибку или автооткрытие окна (никогда в бою). Всё по желанию.
 - **Настройки** в окне и в меню игры (Esc → Настройки → Модификации). Английский и русский язык или язык игры.
@@ -111,7 +126,7 @@ BugSack и BugGrabber — классические ловцы ошибок, и �
 - **Сам называет виновника** с файлом и строкой, а не оставляет разбираться в цепочке вызовов.
 - **Список всех ошибок** с фильтром по аддону, а не листание по одной.
 - **История:** когда случалась каждая ошибка, а не только сколько раз.
-- **Готовые отчёты** на английском с версиями аддона и игры, для одной ошибки или до 10 сразу.
+- **Готовые отчёты** на английском с версиями аддона и игры, для одной ошибки или всего списка сразу.
 - **Поиск обычным текстом:** поиск скобок или точек работает как ожидается.
 - **Новые и просмотренные:** кнопка у миникарты краснеет только из-за ошибок, которые вы ещё не видели.
 - **Один аддон вместо двух.**
@@ -123,6 +138,7 @@ BugSack и BugGrabber — классические ловцы ошибок, и �
 1. Играйте как обычно. Когда что-то ломается, кнопка у миникарты краснеет.
 2. Нажмите на неё (или наберите `/fbugs`) и выберите ошибку в списке.
 3. Чтобы сообщить автору аддона, нажмите **Копировать ошибку**, затем Ctrl+C, и вставьте на его GitHub, страницу CurseForge или в Discord.
+4. Чтобы отправить сразу несколько ошибок одного аддона, выберите его в фильтре справа вверху, нажмите **Копировать список**, затем Ctrl+C.
 
 Команды: `/fbugs` открывает и закрывает окно, `/fbugs options` настройки, `/fbugs clear` удаляет все ошибки, `/fbugs 5` выводит ошибку номер 5 в чат. Работает и `/foreverbugs`.
 

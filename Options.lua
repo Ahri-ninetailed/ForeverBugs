@@ -52,7 +52,7 @@ end
 
 function ns.BuildOptions(parent)
 	local title = parent:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
-	title:SetPoint("TOPLEFT", parent, "TOPLEFT", 16, -16)
+	title:SetPoint("TOPLEFT", parent, "TOPLEFT", 60, -16) -- right of the window's round portrait, which covered the "F"
 	title:SetText(ns.TITLE .. (ns.VERSION and ns.VERSION:sub(1, 1) ~= "@" and ("  " .. ns.VERSION) or ""))
 
 	-- Left column: switches.

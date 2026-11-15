@@ -9,6 +9,9 @@ mock = {
 	secure = true,         -- does the current ShowUIPanel/HideUIPanel call count as game code?
 	shift = false,
 	alt = false,
+	ctrl = false,
+	keys = {},             -- key name -> true while held, for IsKeyDown
+	timers = {},           -- C_Timer.After callbacks waiting to run, see mock.RunTimers
 	locale = "enUS",
 	stack = "",            -- what debugstack() returns
 	locals = "",           -- what debuglocals() returns
@@ -124,6 +127,7 @@ function Object:RegisterEvent(event) self.events[event] = true end
 function Object:UnregisterEvent(event) self.events[event] = nil end
 function Object:SetFocus() self.focused = true end
 function Object:ClearFocus() self.focused = false end
+function Object:HasFocus() return self.focused == true end
 function Object:HighlightText() self.highlighted = true end
 function Object:SetFontObject(font) self.font = font end
 function Object:SetVerticalScroll(value) self.scrolled = value end
@@ -174,6 +178,15 @@ function GetBuildInfo() return "1.60.1", "70888", "Nov 10 2026", 16001 end
 function InCombatLockdown() return mock.combat end
 function IsShiftKeyDown() return mock.shift end
 function IsAltKeyDown() return mock.alt end
+function IsControlKeyDown() return mock.ctrl end
+function IsMetaKeyDown() return false end
+function IsKeyDown(key) return mock.keys[key] == true end
+C_Timer = { After = function(_, fn) mock.timers[#mock.timers + 1] = fn end }
+function mock.RunTimers()
+	local due = mock.timers
+	mock.timers = {}
+	for _, fn in ipairs(due) do fn() end
+end
 function PlaySound(id, channel)
 	mock.sounds[#mock.sounds + 1] = { id = id, channel = channel }
 	return not mock.missingSounds[id] -- willPlay

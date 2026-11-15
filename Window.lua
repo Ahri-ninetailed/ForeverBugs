@@ -1,6 +1,7 @@
 -- The window: the list on the left (newest on top), the chosen error on the
 -- right, tabs for all errors / this session / previous session / settings,
--- search, addon filter and copy-ready reports.
+-- search, addon filter and copy-ready reports: "Copy list" under the list
+-- copies every error in it, "Copy this error" under the text copies that one.
 --
 -- The list has two modes: one row per error (repeats as "x8"), or "each time
 -- separately", where every occurrence from the history is its own row.
@@ -15,7 +16,7 @@ local ROW_HEIGHT = 36
 
 local window, searchBox, eachTimeBox, addonDropdown, optionsPanel
 local listScroll, listChild, listBackground, detailScroll, textBox
-local shownText, copyOneButton, copyAllButton, deleteButton
+local statusText, copyOneButton, copyListButton, deleteButton
 local rows = {}
 
 local tab = TAB_ALL
@@ -24,9 +25,13 @@ local searchText = ""
 local list = {}          -- rows on screen, newest first: { key = ..., err = ..., time = ... }
 local selectedKey        -- the chosen row: the error, or a history entry in "each time" mode
 local selected           -- the error shown on the right
-local copyMode           -- nil, "one" or "all"
+local copyMode           -- nil, "one" (this error) or "all" (the list)
+local copied = false     -- Ctrl+C was pressed in the current copy mode
+local copyToken = 0      -- changes every time a copy mode starts
+local grabFocus = false  -- the player just pressed a copy button: put the cursor into the text
 local displayed = ""     -- the text box is read-only: typing restores this
 local newSince = 0       -- errors with a higher id were new when the window opened
+local listErrors, listIncluded = 0, 0 -- errors in the list, and how many of them "Copy list" takes
 
 local Render
 
@@ -145,7 +150,8 @@ local function FirstLine(text)
 	return (text:match("^[^\n]*"))
 end
 
-local function RenderList()
+-- inReport: errors in the "Copy list" text, their rows are lit up too.
+local function RenderList(inReport)
 	local eachTime = ns.settings.eachTime
 	listChild:SetHeight(math.max(1, #list * ROW_HEIGHT))
 	for i, item in ipairs(list) do
@@ -158,7 +164,7 @@ local function RenderList()
 		row.messageText:SetText(L["KIND_SHORT_" .. (err.kind or "error")] .. ": "
 			.. ns.Escape(FirstLine(ns.DisplayMessage(err))))
 		row.newMark:SetShown(err.id ~= nil and err.id > newSince)
-		row.selectedTexture:SetShown(item.key == selectedKey)
+		row.selectedTexture:SetShown(item.key == selectedKey or (inReport ~= nil and inReport[err] == true))
 		row:Show()
 	end
 	for i = #list + 1, #rows do
@@ -179,6 +185,35 @@ local function ListedErrors()
 	return errors
 end
 
+local REPORT_TAB_NAMES = { [TAB_ALL] = "all errors", [TAB_SESSION] = "this session", [TAB_PREVIOUS] = "previous session" }
+
+-- Which list a copied report comes from, in English like the rest of the report.
+local function ReportListText()
+	local parts = { REPORT_TAB_NAMES[tab] or REPORT_TAB_NAMES[TAB_ALL] }
+	if addonFilter == "?" then
+		parts[#parts + 1] = "unknown addon"
+	elseif addonFilter then
+		parts[#parts + 1] = "addon " .. addonFilter
+	else
+		parts[#parts + 1] = "all addons"
+	end
+	if searchText ~= "" then
+		parts[#parts + 1] = "search \"" .. searchText .. "\""
+	end
+	return table.concat(parts, ", ")
+end
+
+-- Under the error text: what to press while a copy text is selected, then "Copied!".
+local function RenderStatus()
+	if copyMode and copied then
+		statusText:SetText(L.COPIED)
+		statusText:SetTextColor(0.3, 1, 0.3)
+	else
+		statusText:SetText(copyMode and L.COPY_PRESS or "")
+		statusText:SetTextColor(1, 0.82, 0)
+	end
+end
+
 -- toTop: scroll the error text back to its beginning (another error is shown).
 function Render(toTop)
 	if not window then return end
@@ -186,21 +221,33 @@ function Render(toTop)
 	PanelTemplates_SetTab(window, tab)
 	optionsPanel:SetShown(isOptions)
 	for _, widget in ipairs({ searchBox, eachTimeBox, addonDropdown, listScroll, listBackground, detailScroll,
-		shownText, copyOneButton, copyAllButton, deleteButton }) do
+		statusText, copyOneButton, copyListButton, deleteButton }) do
 		widget:SetShown(not isOptions)
 	end
-	if isOptions then return end
+	if isOptions then
+		grabFocus = false
+		return
+	end
 	ns.MarkAllSeen() -- the error view is on screen
-
-	RenderList()
-	shownText:SetText(L.SHOWN:format(#list))
-	eachTimeBox:SetChecked(ns.settings.eachTime)
 
 	if not selected then
 		copyMode = nil
 	end
+	local errors = ListedErrors()
+	local report, included = ns.FormatReportMany(errors, ReportListText())
+	listErrors, listIncluded = #errors, included
+	local inReport
 	if copyMode == "all" then
-		displayed = ns.Escape(ns.FormatReportMany(ListedErrors()))
+		inReport = {}
+		for i = 1, included do
+			inReport[errors[i]] = true
+		end
+	end
+	RenderList(inReport)
+	eachTimeBox:SetChecked(ns.settings.eachTime)
+
+	if copyMode == "all" then
+		displayed = ns.Escape(report)
 	elseif copyMode == "one" then
 		displayed = ns.Escape(ns.FormatReport(selected))
 	elseif selected then
@@ -211,22 +258,94 @@ function Render(toTop)
 	textBox:SetText(displayed)
 
 	copyOneButton:SetEnabled(selected ~= nil)
-	copyAllButton:SetEnabled(#list > 0)
+	copyListButton:SetEnabled(#errors > 0)
 	deleteButton:SetEnabled(selected ~= nil)
 	copyOneButton:SetText(copyMode == "one" and L.COPY_BACK or L.COPY_ONE)
-	copyAllButton:SetText(copyMode == "all" and L.COPY_BACK or L.COPY_ALL)
+	if copyMode == "all" then
+		copyListButton:SetText(L.COPY_BACK)
+	elseif included < #errors then
+		copyListButton:SetText(L.COPY_LIST_PART:format(included, #errors))
+	else
+		copyListButton:SetText(L.COPY_LIST:format(#errors))
+	end
+	RenderStatus()
 	if addonDropdown.GenerateMenu then
 		addonDropdown:GenerateMenu()
 	end
 	if toTop then
 		detailScroll:SetVerticalScroll(0)
 	end
+	-- Only a copy button puts the cursor into the text: a new error arriving
+	-- while the player types in chat must not take the keyboard away.
 	if copyMode then
-		textBox:SetFocus()
-		textBox:HighlightText()
-	else
+		if grabFocus or textBox:HasFocus() then
+			textBox:SetFocus()
+			textBox:HighlightText()
+		end
+	elseif toTop then
 		textBox:ClearFocus()
 	end
+	grabFocus = false
+end
+
+local function ToggleCopy(mode)
+	if copyMode == mode then
+		copyMode = nil
+	else
+		copyMode = mode
+		copied = false
+		copyToken = copyToken + 1
+		grabFocus = true
+	end
+	Render(true)
+end
+
+-- Ctrl+C (Cmd+C on a Mac) while the copy text is selected: say so, then go
+-- back to the error. Read by polling: a key handler on the text box could
+-- take the keyboard away from the game.
+local function CopyKeysDown()
+	if not IsKeyDown then return false end
+	local modifier = (IsControlKeyDown and IsControlKeyDown()) or (IsMetaKeyDown and IsMetaKeyDown())
+	if not modifier then return false end
+	local ok, down = pcall(IsKeyDown, "C")
+	return ok and down == true
+end
+
+local function WatchCopyKeys(box)
+	if not copyMode or copied or not box:HasFocus() or not CopyKeysDown() then return end
+	copied = true
+	RenderStatus()
+	local token = copyToken
+	if C_Timer then
+		C_Timer.After(1.5, function()
+			if copyMode and copyToken == token then
+				copyMode = nil
+				Render(true)
+			end
+		end)
+	end
+end
+
+-- The "Copy list" tooltip says what exactly goes into the text.
+local function CopyListTooltip(self)
+	local tabNames = { L.TAB_ALL, L.TAB_SESSION, L.TAB_PREVIOUS }
+	local addon = addonFilter == nil and L.ALL_ADDONS or addonFilter == "?" and L.UNKNOWN_ADDON or addonFilter
+	GameTooltip:SetOwner(self, "ANCHOR_TOP")
+	GameTooltip:AddLine(L.COPY_LIST:format(listErrors))
+	GameTooltip:AddLine(L.COPY_LIST_HINT, 1, 1, 1, true)
+	GameTooltip:AddLine(" ")
+	if listIncluded < listErrors then
+		GameTooltip:AddLine(L.COPY_LIST_ERRORS_PART:format(listIncluded, listErrors), 1, 0.5, 0.25, true)
+	else
+		GameTooltip:AddLine(L.COPY_LIST_ERRORS:format(listErrors), 1, 1, 1, true)
+	end
+	GameTooltip:AddLine(L.COPY_LIST_TAB:format(tabNames[tab] or L.TAB_ALL), 1, 1, 1, true)
+	GameTooltip:AddLine(L.COPY_LIST_ADDON:format(ns.Escape(addon)), 1, 1, 1, true)
+	GameTooltip:AddLine(L.COPY_LIST_SEARCH:format(searchText ~= "" and ("\"" .. ns.Escape(searchText) .. "\"") or "-"), 1, 1, 1, true)
+	if ns.settings.eachTime then
+		GameTooltip:AddLine(L.COPY_LIST_EACH_TIME, 1, 1, 1, true)
+	end
+	GameTooltip:Show()
 end
 
 local function Refresh()
@@ -370,7 +489,14 @@ local function Create()
 	textBox:SetWidth(WIDTH - LIST_WIDTH - 24 - 34 - 10)
 	textBox:SetFontObject(_G[ns.settings.fontSize] or GameFontHighlight)
 	textBox:SetTextInsets(2, 2, 2, 2)
-	textBox:SetScript("OnEscapePressed", textBox.ClearFocus)
+	textBox:SetScript("OnEscapePressed", function(self)
+		if copyMode then
+			copyMode = nil -- back to the error
+			Render(true)
+		else
+			self:ClearFocus()
+		end
+	end)
 	textBox:SetScript("OnTextChanged", function(self, userInput)
 		if userInput then
 			self:SetText(displayed) -- read-only
@@ -379,26 +505,31 @@ local function Create()
 			end
 		end
 	end)
+	-- A click into a copy text selects all of it again.
+	local function SelectAllForCopy(self)
+		if copyMode then
+			self:HighlightText()
+		end
+	end
+	textBox:SetScript("OnEditFocusGained", SelectAllForCopy)
+	textBox:SetScript("OnMouseUp", SelectAllForCopy)
+	textBox:SetScript("OnUpdate", WatchCopyKeys)
 	detailScroll:SetScrollChild(textBox)
 
-	-- Bottom: copy, delete, how many are shown.
-	copyOneButton = Button(L.COPY_ONE, 200)
-	copyOneButton:SetPoint("BOTTOMLEFT", window, "BOTTOMLEFT", 12, 12)
-	copyOneButton:SetScript("OnClick", function()
-		copyMode = copyMode ~= "one" and "one" or nil
-		Render(true)
-	end)
+	-- Bottom: "Copy list" under the list; under the error text: copy it, what
+	-- to press, delete it.
+	copyListButton = Button(L.COPY_LIST:format(0), LIST_WIDTH)
+	copyListButton:SetPoint("BOTTOMLEFT", window, "BOTTOMLEFT", 12, 12)
+	copyListButton:SetScript("OnClick", function() ToggleCopy("all") end)
+	copyListButton:SetScript("OnEnter", CopyListTooltip)
+	copyListButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
+	copyOneButton = Button(L.COPY_ONE, 180)
+	copyOneButton:SetPoint("BOTTOMLEFT", window, "BOTTOMLEFT", LIST_WIDTH + 24, 12)
+	copyOneButton:SetScript("OnClick", function() ToggleCopy("one") end)
 	Tooltip(copyOneButton, L.COPY_ONE, L.COPY_HINT)
 
-	copyAllButton = Button(L.COPY_ALL, 220)
-	copyAllButton:SetPoint("LEFT", copyOneButton, "RIGHT", 8, 0)
-	copyAllButton:SetScript("OnClick", function()
-		copyMode = copyMode ~= "all" and "all" or nil
-		Render(true)
-	end)
-	Tooltip(copyAllButton, L.COPY_ALL, L.COPY_ALL_HINT:format(ns.REPORT_MAX_ERRORS))
-
-	deleteButton = Button(L.DELETE, 170)
+	deleteButton = Button(L.DELETE, 160)
 	deleteButton:SetPoint("BOTTOMRIGHT", window, "BOTTOMRIGHT", -12, 12)
 	deleteButton:SetScript("OnClick", function()
 		if not selected then return end
@@ -410,8 +541,11 @@ local function Create()
 	end)
 	Tooltip(deleteButton, L.DELETE, L.DELETE_HINT)
 
-	shownText = window:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-	shownText:SetPoint("RIGHT", deleteButton, "LEFT", -14, 0)
+	statusText = window:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+	statusText:SetPoint("LEFT", copyOneButton, "RIGHT", 10, 0)
+	statusText:SetPoint("RIGHT", deleteButton, "LEFT", -10, 0)
+	statusText:SetHeight(32)
+	statusText:SetJustifyH("CENTER")
 
 	optionsPanel = CreateFrame("Frame", nil, window)
 	optionsPanel:SetPoint("TOPLEFT", window, "TOPLEFT", 10, -26)

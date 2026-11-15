@@ -113,9 +113,14 @@ local function RowTexts(env)
 	return table.concat(texts, ",")
 end
 
-local function Shown(env)
-	local found = env.mock.Find("FontString", function(o) return type(o.text) == "string" and o.text:match("^Shown: %d+$") end)
+-- The line under the error text while a copy text is selected.
+local function Status(env)
+	local found = env.mock.Find("FontString", function(o) return o.text == "Ctrl+C: copy     Esc: back" or o.text == "Copied!" end)
 	return found and found.text
+end
+
+local function CopyListButton(env)
+	return env.mock.Find("Button", function(o) return type(o.text) == "string" and o.text:match("^Copy list %(") ~= nil end)
 end
 
 local function ButtonWithText(env, text)
@@ -597,7 +602,8 @@ do
 		and rows[1].countText.text == "", rows[1].messageText.text)
 	check("new errors are marked while the window is open", rows[1].newMark.shown and rows[3].newMark.shown)
 	check("the newest is chosen", rows[1].selectedTexture.shown and TextBox(env).text:find("third", 1, true))
-	check("how many are shown", Shown(env) == "Shown: 3", Shown(env))
+	check("the copy list button says how many errors it copies", CopyListButton(env) ~= nil
+		and CopyListButton(env).text == "Copy list (3)", CopyListButton(env) and CopyListButton(env).text)
 
 	rows[3]:Click()
 	check("a click shows that error", TextBox(env).text:find("first", 1, true) and rows[3].selectedTexture.shown
@@ -622,12 +628,19 @@ do
 	copyOne:Click()
 	check("and goes back", box.text:find("First:", 1, true) and copyOne.text == "Copy this error")
 
-	local copyAll = ButtonWithText(env, "Copy all shown")
+	local copyAll = CopyListButton(env)
+	box.highlighted, box.focused = false, false
 	copyAll:Click()
-	check("copy all shows every listed error", box.text:find("report, 3 of 3 errors", 1, true)
-		and box.text:find("#1 Addon: OpenMap", 1, true) and box.text:find("#3 Addon: Baganator", 1, true) and box.highlighted)
+	check("copy list shows every listed error", box.text:find("report, 3 of 3 errors", 1, true)
+		and box.text:find("\nList: all errors, all addons\n", 1, true)
+		and box.text:find("#1 Addon: OpenMap", 1, true) and box.text:find("#3 Addon: Baganator", 1, true)
+		and box.highlighted and box.focused and copyAll.text == "Back to the error")
+	check("and lights up the rows it copies", Rows(env)[1].selectedTexture.shown and Rows(env)[2].selectedTexture.shown
+		and Rows(env)[3].selectedTexture.shown)
+	check("and says what to press", Status(env) == "Ctrl+C: copy     Esc: back", Status(env))
 	copyAll:Click()
-	check("and goes back too", not box.text:find("```", 1, true))
+	check("and goes back too", not box.text:find("```", 1, true) and copyAll.text == "Copy list (3)"
+		and not Rows(env)[2].selectedTexture.shown and Status(env) == nil)
 
 	local search = env.mock.Find("EditBox", function(o) return rawget(o, "Instructions") ~= nil end)
 	search:Type("second")
@@ -643,8 +656,8 @@ do
 	MenuItem(items, "OpenMap").setSelected()
 	check("addon filter narrows the list", RowTexts(env) == "first,third")
 	copyAll:Click()
-	check("copy all copies only the filtered ones", box.text:find("report, 2 of 2 errors", 1, true)
-		and not box.text:find("Baganator", 1, true))
+	check("copy list copies only the filtered ones", box.text:find("report, 2 of 2 errors", 1, true)
+		and box.text:find("\nList: all errors, addon OpenMap\n", 1, true) and not box.text:find("Baganator", 1, true))
 	MenuItem(dropdown:GenerateMenu(), "All addons").setSelected()
 	check("and resets", RowTexts(env) == "first,third,second")
 
@@ -800,12 +813,82 @@ do
 	for i = 1, 15 do
 		env.mock.handler("many " .. i)
 	end
-	local text = ns.FormatReportMany(ns.GetErrors())
-	check("copy all takes at most 10", text:find("report, 10 of 15 errors", 1, true)
-		and text:find("5 more errors are not included", 1, true) and not text:find("#11 ", 1, true))
+	local newestFirst, found = {}, ns.GetErrors()
+	for i = #found, 1, -1 do
+		newestFirst[#newestFirst + 1] = found[i]
+	end
+	local text, included = ns.FormatReportMany(newestFirst, "all errors, all addons")
+	check("copy list takes every error that fits", included == 15 and text:find("report, 15 of 15 errors", 1, true)
+		and text:find("\nList: all errors, all addons\n", 1, true) and text:find("#15 ", 1, true)
+		and not text:find("not included", 1, true), text:match("[^\n]*report[^\n]*"))
+	check("newest first", text:find("many 15", 1, true) < text:find("many 14", 1, true))
 	ns.REPORT_MAX_LENGTH = 50 -- less than one error: still the newest one is included
-	text = ns.FormatReportMany(ns.GetErrors())
-	check("and stays short enough for GitHub", text:find("report, 1 of 15 errors", 1, true) ~= nil, text:match("[^\n]*report[^\n]*"))
+	text, included = ns.FormatReportMany(newestFirst)
+	check("and stays short enough for GitHub", included == 1 and text:find("report, 1 of 15 errors", 1, true)
+		and text:find("\n14 more errors are not included", 1, true) and not text:find("List:", 1, true),
+		text:match("[^\n]*report[^\n]*"))
+	text = ns.FormatReportMany({ newestFirst[1], newestFirst[2] })
+	check("one missing error is counted right", text:find("\n1 more error is not included", 1, true) ~= nil)
+end
+
+do
+	local env, ns = NewGame()
+	env.mock.handler("Interface/AddOns/OpenMap/A.lua:1: alpha")
+	env.mock.now = env.mock.now + 1
+	env.mock.handler("Interface/AddOns/Baganator/B.lua:2: beta")
+	ns.ShowWindow()
+	local box, copyList = TextBox(env), CopyListButton(env)
+
+	copyList:Run("OnEnter")
+	local tip = table.concat(env.GameTooltip.lines, "\n")
+	check("the copy list tooltip says what is copied", tip:find("Errors: 2", 1, true) and tip:find("Tab: All errors", 1, true)
+		and tip:find("Addon: All addons", 1, true) and tip:find("Search: -", 1, true), tip)
+
+	copyList:Click()
+	check("a copy button puts the cursor into the text", box.focused and box.highlighted)
+	box:ClearFocus() -- the player clicks into the chat to type
+	box.highlighted = false
+	env.mock.now = env.mock.now + 1
+	env.mock.handler("Interface/AddOns/OpenMap/C.lua:3: gamma")
+	check("a new error updates the copy text", box.text:find("report, 3 of 3 errors", 1, true) ~= nil)
+	check("but does not take the keyboard", not box.focused and not box.highlighted)
+	box:Run("OnEditFocusGained")
+	check("a click into the copy text selects all of it", box.highlighted)
+
+	env.mock.ctrl, env.mock.keys.C = true, true
+	box:ClearFocus()
+	box:Run("OnUpdate", 0.02)
+	check("Ctrl+C elsewhere is not a copy", Status(env) == "Ctrl+C: copy     Esc: back", Status(env))
+	box:SetFocus()
+	box:Run("OnUpdate", 0.02)
+	env.mock.ctrl, env.mock.keys.C = false, nil
+	check("Ctrl+C in the copy text says it is copied", Status(env) == "Copied!", Status(env))
+	box:Run("OnEscapePressed")
+	check("Esc goes back to the error", not box.text:find("```", 1, true) and copyList.text == "Copy list (3)")
+	copyList:Click()
+	env.mock.RunTimers()
+	check("the timer of an old copy does not close a new one", box.text:find("```", 1, true) ~= nil
+		and Status(env) == "Ctrl+C: copy     Esc: back", Status(env))
+	env.mock.ctrl, env.mock.keys.C = true, true
+	box:Run("OnUpdate", 0.02)
+	env.mock.ctrl, env.mock.keys.C = false, nil
+	env.mock.RunTimers()
+	check("after Ctrl+C it goes back to the error by itself", not box.text:find("```", 1, true) and copyList.text == "Copy list (3)")
+
+	env.ForeverBugsFrameTab2:Click()
+	local search = env.mock.Find("EditBox", function(o) return rawget(o, "Instructions") ~= nil end)
+	search:Type("gamma")
+	copyList:Click()
+	check("the report says which list it is", box.text:find("\nList: this session, all addons, search \"gamma\"\n", 1, true) ~= nil,
+		box.text:match("[^\n]*List:[^\n]*"))
+	search:Type("")
+
+	ns.REPORT_MAX_LENGTH = 50
+	env.ForeverBugsFrameTab1:Click()
+	check("the button says when not all errors fit", copyList.text == "Copy list (1 of 3)", copyList.text)
+
+	ButtonWithText(env, "Copy this error"):Click()
+	check("copy this error also says what to press", Status(env) == "Ctrl+C: copy     Esc: back" and box.focused)
 end
 
 -----------------------------------------------------------------------
@@ -894,8 +977,11 @@ do
 	check("choosing an old occurrence shows its error", Rows(env)[3].selectedTexture.shown
 		and not Rows(env)[1].selectedTexture.shown and TextBox(env).text:find("alpha", 1, true))
 
-	ButtonWithText(env, "Copy all shown"):Click()
-	check("copy all takes each error once", TextBox(env).text:find("report, 2 of 2 errors", 1, true) ~= nil)
+	check("the copy list button counts errors, not rows", CopyListButton(env).text == "Copy list (2)", CopyListButton(env).text)
+	CopyListButton(env):Click()
+	check("copy list takes each error once", TextBox(env).text:find("report, 2 of 2 errors", 1, true) ~= nil)
+	check("and lights up every row of them", Rows(env)[1].selectedTexture.shown and Rows(env)[2].selectedTexture.shown
+		and Rows(env)[3].selectedTexture.shown)
 	ButtonWithText(env, "Back to the error"):Click()
 
 	local dropdown = env.mock.Find("DropdownButton", function(o) return o.parent == env.ForeverBugsFrame end)

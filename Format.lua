@@ -193,15 +193,19 @@ function ns.FormatReport(err)
 	return table.concat(lines, "\n")
 end
 
-ns.REPORT_MAX_ERRORS = 10
 ns.REPORT_MAX_LENGTH = 60000 -- a GitHub issue holds about 65 000 characters
 
--- Several errors (newest first) in one block: without local variables, at most
--- 10 of them and short enough for a GitHub issue.
-function ns.FormatReportMany(list)
+-- Several errors (newest first) in one block, without local variables and
+-- short enough for a GitHub issue. The newest error is always included.
+-- listText: which list they come from, e.g. "this session, addon OpenMap".
+-- Returns the text and how many errors it includes.
+function ns.FormatReportMany(list, listText)
 	local lines = ReportHeader("report")
+	if listText then
+		lines[#lines + 1] = "List: " .. listText
+	end
 	local length, included = 0, 0
-	for i = 1, math.min(#list, ns.REPORT_MAX_ERRORS) do
+	for i = 1, #list do
 		local part = {}
 		AddErrorLines(part, list[i], "#" .. i .. " ")
 		local text = table.concat(part, "\n")
@@ -214,10 +218,12 @@ function ns.FormatReportMany(list)
 		included = included + 1
 	end
 	lines[2] = lines[2] .. (", %d of %d errors"):format(included, #list)
-	if included < #list then
+	local missing = #list - included
+	if missing > 0 then
 		lines[#lines + 1] = ""
-		lines[#lines + 1] = ("%d more errors are not included. Filter by addon to copy them."):format(#list - included)
+		lines[#lines + 1] = (missing == 1 and "1 more error is not included" or (missing .. " more errors are not included"))
+			.. ": it would not fit into one GitHub issue. Narrow the list with a tab, the search or the addon filter to copy the rest."
 	end
 	lines[#lines + 1] = "```"
-	return table.concat(lines, "\n")
+	return table.concat(lines, "\n"), included
 end
