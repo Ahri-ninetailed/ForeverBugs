@@ -8,6 +8,8 @@ It also catches what other error catchers miss in WoW Forever: the message **"In
 
 ![The Forever Bugs window: the list of errors on the left, the chosen error on the right](https://raw.githubusercontent.com/Ahri-ninetailed/ForeverBugs/main/media/window.png)
 
+![The copy window: the report is already selected, press Ctrl+C](https://raw.githubusercontent.com/Ahri-ninetailed/ForeverBugs/main/media/copy.png)
+
 ![Forever Bugs settings](https://raw.githubusercontent.com/Ahri-ninetailed/ForeverBugs/main/media/settings.png)
 
 ## Features
@@ -24,12 +26,14 @@ It also catches what other error catchers miss in WoW Forever: the message **"In
   - tabs: all errors, this session, previous session, settings;
   - search in plain text (error, call stack, variables, addon), and a filter by addon with counts;
   - repeats are shown as one row with a count, the first and the last time, and the **history** of when it happened (the last 50 times of each error);
-  - **"Each time separately"**: every occurrence as its own row with its time;
-  - new errors are marked; **delete** a single error or all of them.
+  - **Timeline**: the errors in the order they happened, every time as a row with its time; repeats of an error in the same second are one row with a count. It shows which errors come together and what happened right before a blocked action;
+  - **pick several rows** like in Windows: Ctrl-click adds or removes a row, Shift-click picks a range, Ctrl+Shift-click adds a range; then copy or delete them together;
+  - new errors are marked; **delete** a single error, the picked ones or all of them.
 - **Copy-ready reports** for GitHub, CurseForge or Discord, always in English: the addon and game versions, times, history, place, call stack and variables.
-  - **Copy this error**, under the error text, copies the chosen error.
-  - **Copy list (N)**, under the list, copies every error in the list into one text that fits a GitHub issue. The tab, the search and the addon filter decide what is in the list; the button shows how many errors it takes, its tooltip shows the filters, and the copied rows light up.
-  - While the text is selected, the window says what to press (Ctrl+C to copy, Esc to go back) and shows "Copied!" after Ctrl+C.
+  - **Copy this error**, under the error text, takes the chosen error.
+  - **Copy list (N)**, under the list, takes every error in the list, each once, in one text that fits a GitHub issue. The tab, the search and the addon filter decide what is in the list; the button shows how many rows it takes and its tooltip shows the filters. With the timeline on, the text starts with the same rows as the list (time, error number, addon, count), then each error once in full.
+  - With several rows picked, **Copy selected (N)** takes just those.
+  - Both open a small copy window with the text already selected: press Ctrl+C, it says "Copied!" and closes by itself.
 - **Minimap button:** red when there are errors you have not seen, yellow when all are seen, plain when there are none. The tooltip lists the newest errors. Click: open the window; Shift-click: reload the interface; right-click: settings; Alt-click: delete all errors (if you allow it). It can also sit in the game's addon menu at the minimap.
 - **Alerts:** a sound (7 sounds of the game to choose from, also on the Master channel), a reminder in chat with a link that opens the error, or opening the window by itself (never during combat). All optional.
 - **Settings** in the window and in the game menu (Esc > Options > AddOns). English and Russian, or the language of the game.
@@ -86,6 +90,8 @@ Source code and bug reports: [GitHub](https://github.com/Ahri-ninetailed/Forever
 
 ![Окно Forever Bugs: список ошибок слева, выбранная ошибка справа](https://raw.githubusercontent.com/Ahri-ninetailed/ForeverBugs/main/media/window.png)
 
+![Окно копирования: отчёт уже выделен, нажмите Ctrl+C](https://raw.githubusercontent.com/Ahri-ninetailed/ForeverBugs/main/media/copy.png)
+
 ![Настройки Forever Bugs](https://raw.githubusercontent.com/Ahri-ninetailed/ForeverBugs/main/media/settings.png)
 
 ## Возможности
@@ -102,12 +108,14 @@ Source code and bug reports: [GitHub](https://github.com/Ahri-ninetailed/Forever
   - вкладки: все ошибки, этот сеанс, прошлый сеанс, настройки;
   - поиск обычным текстом (ошибка, цепочка вызовов, переменные, аддон) и фильтр по аддону со счётчиками;
   - повторы показаны одной строкой со счётчиком, временем первого и последнего раза и **историей** появлений (последние 50 раз каждой ошибки);
-  - **«Каждый раз отдельно»**: каждое появление отдельной строкой со своим временем;
-  - новые ошибки отмечены; можно **удалить** одну ошибку или все.
+  - **Хронология**: ошибки в том порядке, в каком они случались, каждый раз — строка со своим временем; повторы одной ошибки в ту же секунду — одна строка со счётчиком. Видно, какие ошибки идут вместе и что было прямо перед заблокированным действием;
+  - **выбор нескольких строк**, как в Windows: Ctrl+клик добавляет или убирает строку, Shift+клик выбирает строки подряд, Ctrl+Shift+клик добавляет строки подряд; выбранные можно скопировать или удалить вместе;
+  - новые ошибки отмечены; можно **удалить** одну ошибку, выбранные или все.
 - **Готовые отчёты** для GitHub, CurseForge или Discord, всегда на английском: версии аддона и игры, время, история, место, цепочка вызовов и переменные.
-  - **Копировать ошибку** под текстом ошибки копирует выбранную ошибку.
-  - **Копировать список (N)** под списком копирует все ошибки из списка одним текстом, который влезает в задачу на GitHub. Что попадает в список, решают вкладка, поиск и фильтр по аддону; на кнопке видно, сколько ошибок она возьмёт, в подсказке — какие фильтры включены, а скопированные строки подсвечиваются.
-  - Пока текст выделен, окно подсказывает, что нажать (Ctrl+C — скопировать, Esc — назад), а после Ctrl+C пишет «Скопировано!».
+  - **Копировать ошибку** под текстом ошибки берёт выбранную ошибку.
+  - **Копировать список (N)** под списком берёт все ошибки из списка, каждую один раз, одним текстом, который влезает в задачу на GitHub. Что попадает в список, решают вкладка, поиск и фильтр по аддону; на кнопке видно, сколько строк она возьмёт, в подсказке — какие фильтры включены. С включённой хронологией текст начинается с тех же строк, что в списке (время, номер ошибки, аддон, счётчик), а ниже каждая ошибка один раз полностью.
+  - Если выбрано несколько строк, **Копировать выбранные (N)** берёт только их.
+  - Обе открывают маленькое окно копирования с уже выделенным текстом: нажмите Ctrl+C, окно напишет «Скопировано!» и закроется само.
 - **Кнопка у миникарты:** красная, если есть ошибки, которые вы ещё не видели; жёлтая, если все просмотрены; обычная, если ошибок нет. В подсказке свежие ошибки. Клик: открыть окно; Shift+клик: перезагрузить интерфейс; правый клик: настройки; Alt+клик: удалить все ошибки (если разрешено). Может быть и в меню аддонов у миникарты.
 - **Оповещения:** звук (7 звуков игры на выбор, можно через общий канал), напоминание в чате со ссылкой на ошибку или автооткрытие окна (никогда в бою). Всё по желанию.
 - **Настройки** в окне и в меню игры (Esc → Настройки → Модификации). Английский и русский язык или язык игры.

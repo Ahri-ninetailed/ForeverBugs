@@ -126,6 +126,7 @@ function Object:CreateTexture() return NewObject("Texture", nil, self) end
 function Object:RegisterEvent(event) self.events[event] = true end
 function Object:UnregisterEvent(event) self.events[event] = nil end
 function Object:SetFocus() self.focused = true end
+function Object:SetTitle(title) self.title = title end
 function Object:ClearFocus() self.focused = false end
 function Object:HasFocus() return self.focused == true end
 function Object:HighlightText() self.highlighted = true end

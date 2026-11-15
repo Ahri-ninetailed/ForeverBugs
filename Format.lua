@@ -195,16 +195,13 @@ end
 
 ns.REPORT_MAX_LENGTH = 60000 -- a GitHub issue holds about 65 000 characters
 
--- Several errors (newest first) in one block, without local variables and
--- short enough for a GitHub issue. The newest error is always included.
--- listText: which list they come from, e.g. "this session, addon OpenMap".
--- Returns the text and how many errors it includes.
-function ns.FormatReportMany(list, listText)
-	local lines = ReportHeader("report")
-	if listText then
-		lines[#lines + 1] = "List: " .. listText
-	end
-	local length, included = 0, 0
+ns.REPORT_MAX_TIMES = 200 -- lines in the "every time" part of a report
+
+-- Errors as "#1 Addon: ..." blocks, without local variables, while the text
+-- stays short enough for a GitHub issue; the first one always. length: what
+-- the text already holds. Returns how many errors were added.
+local function AddErrorsInFull(lines, list, length)
+	local included = 0
 	for i = 1, #list do
 		local part = {}
 		AddErrorLines(part, list[i], "#" .. i .. " ")
@@ -217,13 +214,66 @@ function ns.FormatReportMany(list, listText)
 		length = length + #text
 		included = included + 1
 	end
-	lines[2] = lines[2] .. (", %d of %d errors"):format(included, #list)
 	local missing = #list - included
 	if missing > 0 then
 		lines[#lines + 1] = ""
 		lines[#lines + 1] = (missing == 1 and "1 more error is not included" or (missing .. " more errors are not included"))
 			.. ": it would not fit into one GitHub issue. Narrow the list with a tab, the search or the addon filter to copy the rest."
 	end
+	return included
+end
+
+-- Several errors (newest first) in one block, without local variables and
+-- short enough for a GitHub issue. The newest error is always included.
+-- listText: which list they come from, e.g. "this session, addon OpenMap".
+-- Returns the text and how many errors it includes.
+function ns.FormatReportMany(list, listText)
+	local lines = ReportHeader("report")
+	if listText then
+		lines[#lines + 1] = "List: " .. listText
+	end
+	local included = AddErrorsInFull(lines, list, 0)
+	lines[2] = lines[2] .. (", %d of %d errors"):format(included, #list)
 	lines[#lines + 1] = "```"
 	return table.concat(lines, "\n"), included
+end
+
+-- The timeline: first every row as a short line, in the same order as the
+-- list (time, error number, addon, ", N times" for repeats in that second), then
+-- each error once in full. rows: { err = ..., time = ..., count = ... },
+-- newest first; errors are numbered in the order they first appear. Returns
+-- the text, how many errors are in full, and how many errors there are.
+function ns.FormatReportTimes(rows, listText)
+	local errors, numbers, times = {}, {}, 0
+	for _, row in ipairs(rows) do
+		if not numbers[row.err] then
+			errors[#errors + 1] = row.err
+			numbers[row.err] = #errors
+		end
+		times = times + (row.count or 1)
+	end
+	local lines = ReportHeader("report")
+	if listText then
+		lines[#lines + 1] = "List: " .. listText
+	end
+	lines[#lines + 1] = ""
+	lines[#lines + 1] = "Timeline, newest first, as in the list:"
+	local length = 0
+	local listed = math.min(#rows, ns.REPORT_MAX_TIMES)
+	for i = 1, listed do
+		local row = rows[i]
+		local count = row.count or 1
+		local line = ("%s  #%d %s%s"):format(FullTime(row.time), numbers[row.err], row.err.addon or "unknown addon",
+			count > 1 and (", " .. count .. " times") or "")
+		lines[#lines + 1] = line
+		length = length + #line + 1
+	end
+	if #rows > listed then
+		local older = #rows - listed
+		lines[#lines + 1] = older == 1 and "1 older row is not listed." or (older .. " older rows are not listed.")
+	end
+	local included = AddErrorsInFull(lines, errors, length)
+	lines[2] = lines[2] .. (", %d errors, %d times"):format(#errors, times)
+	lines[#lines + 1] = "```"
+	return table.concat(lines, "\n"), included, #errors
 end

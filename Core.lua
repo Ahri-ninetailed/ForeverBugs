@@ -351,9 +351,12 @@ function ns.GetErrors(session, addon, text)
 	return result
 end
 
--- Every occurrence of the matching errors, newest first, as
--- { key = history entry, err = error, time = when }. session filters by the
--- session of the occurrence.
+-- The timeline: every occurrence of the matching errors, newest first, as
+-- { key = history entry, err = error, time = when, count = n }. session
+-- filters by the session of the occurrence. Repeats of an error in the same
+-- second that follow each other are one item with a count: times are kept in
+-- whole seconds, so nothing is lost. Its key is the oldest of them, which
+-- stays the same when more come in that second.
 function ns.GetOccurrences(session, addon, text)
 	local byId = {}
 	for _, err in ipairs(ns.GetErrors(nil, addon, text)) do
@@ -367,7 +370,13 @@ function ns.GetOccurrences(session, addon, text)
 		local entry = history[i]
 		local err = byId[entry.id]
 		if err and (not session or entry.session == session) then
-			result[#result + 1] = { key = entry, err = err, time = entry.time }
+			local last = result[#result]
+			if last and last.err == err and last.time == entry.time then
+				last.count = last.count + 1
+				last.key = entry
+			else
+				result[#result + 1] = { key = entry, err = err, time = entry.time, count = 1 }
+			end
 		end
 	end
 	return result
@@ -521,13 +530,20 @@ function ns.ApplyTaintLog()
 	end
 end
 
-function ns.Delete(err)
-	Remove(err)
-	if byMessage[err.message] == err then
-		byMessage[err.message] = nil
+-- Deletes several errors at once, with one update of the window.
+function ns.DeleteMany(list)
+	for _, err in ipairs(list) do
+		Remove(err)
+		if byMessage[err.message] == err then
+			byMessage[err.message] = nil
+		end
+		RemoveHistory(err.id)
 	end
-	RemoveHistory(err.id)
 	ns.FireUpdate()
+end
+
+function ns.Delete(err)
+	ns.DeleteMany({ err })
 end
 
 function ns.Wipe()
